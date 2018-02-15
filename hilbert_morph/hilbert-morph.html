@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Hilbert curve</title>
+    <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <style>
+      html, body { margin:0; padding:0; overflow:hidden }
+      svg { position:fixed; top:0; left:0; height:100%; width:100% } }
+      svg path { fill: none; stroke: black; }
+    </style>
+  </head>
+  <body>
+    <div></div>
+    <script>
+      var ITERATIONS = 8;
+      var N = Math.pow(2, ITERATIONS + 1);
+
+      var svg = d3.select("div").append("svg")
+        .attr("width", N).attr("height", N)
+        .attr("viewBox","0 0 2 2");
+
+      var path = svg.append("path");
+
+      var RULE = {L: "+RF-LFL-FR+", R: "-LF+RFR+FL-"};
+
+      function next(s) {
+        return s.replace(/([LR])/g, function(x) {
+          return RULE[x];
+        }).replace(/-\+|\+-|\+\+\+\+|----/g, "");
+      }
+
+      function fake(s) {
+        return s.replace(/([LR])/ig, function(x) {
+          return RULE[x.toUpperCase()].toLowerCase();
+        }).replace(/-\+|\+-|\+\+\+\+|----/g, "");
+      }
+
+      function curve(s, scale) {
+        var r = "M" + (scale/2) + "," + (scale/2);
+        var b = [scale, 0];
+
+        for (var j=0; j<s.length; j++) {
+          switch(s.charAt(j)) {
+            case '+': b = [ -b[1], b[0] ]; break;
+            case '-': b = [ b[1], -b[0] ]; break;
+            case 'f':
+              r += "l0,0";
+              break;
+            case 'F':
+              r += "l" + b[0] + "," + b[1];
+              break;
+          }
+        }
+        return r;
+      }
+
+      function makePath(n) {
+        var s = "L";
+        for (var i = 0; i < n; i++) s = next(s);
+        for (; i < ITERATIONS; i++) s = fake(s);
+        return curve(s, Math.pow(2, ITERATIONS - n + 1));
+      }
+
+      var i = 1;
+      function animate() {
+        path.transition().duration(2000)
+          .attr("d", makePath(++i));
+        if (i < ITERATIONS) setTimeout(animate, 2500);
+      }
+
+      path.attr("d", makePath(1) );
+      setTimeout(animate, 1000);
+
+    </script>
+  </body>
+</html>
